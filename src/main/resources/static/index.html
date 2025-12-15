@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Staff Biometric Demo — Final</title>
+
+  <style>
+:root{
+  --bg-start:#cfe8ff; --bg-end:#eaf6ff; --card:#fff;
+  --blue-600:#2b6ef6; --blue-700:#1f56d6; --green-500:#34d399;
+  --muted:#52606d; --radius:22px; --pad:22px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:Inter,system-ui,Arial; background:linear-gradient(180deg,var(--bg-start),var(--bg-end));
+  color:#0f172a; -webkit-font-smoothing:antialiased; padding:36px; display:flex; flex-direction:row; gap:28px;
+}
+.hero{flex:0 0 320px;padding-left:20px}
+.hero-title{margin:0;font-weight:800;font-size:64px;line-height:0.95;background:linear-gradient(180deg,#2d6ef6,#5fb0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.container{flex:1;max-width:720px}
+.page{display:none}.page.active{display:block}
+.card{background:var(--card);border-radius:var(--radius);padding:28px;box-shadow:0 12px 40px rgba(24,39,75,0.08);border:1px solid rgba(20,40,80,0.03);margin-bottom:18px}
+.center-card{max-width:520px;padding:34px}
+.card-title{margin:0;font-size:44px;color:var(--blue-700);font-weight:800}
+.card-sub{margin:0;color:var(--muted)}
+.btn{cursor:pointer;border:0;padding:14px;border-radius:12px;font-weight:700}
+.btn-blue{background:linear-gradient(90deg,var(--blue-600),#4f7cf6);color:#fff}
+.btn-green{background:linear-gradient(90deg,#34d399,#10b981);color:#fff}
+.btn-gradient{background:linear-gradient(90deg,#fbbf24,#fb923c);color:#fff}
+.btn-outline{background:#eef2ff;color:var(--muted);border:1px solid #e3f0ff}
+.btn-ghost{background:transparent;border:1px solid rgba(15,23,42,0.04);color:var(--muted)}
+.btn.big{padding:18px 20px;font-size:20px}
+.btn-stack{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.form-card{max-width:520px}
+.field{display:block;margin-top:14px}
+.field input{width:100%;padding:12px;border-radius:10px;border:1px solid #e6eef8;margin-top:8px;background:#fbfdff}
+.row{display:flex;gap:12px;align-items:center;margin-top:14px}
+.upload{flex:1;border-radius:12px;padding:16px;border:2px dashed #d9eaff;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
+.upload input{display:none}
+.qrPreview{width:120px;height:120px;border-radius:12px;border:1px solid #f0f6ff;display:flex;align-items:center;justify-content:center}
+.scan-card{max-width:520px;padding:0;overflow:hidden}
+.scan-header{background:linear-gradient(180deg,var(--blue-600),var(--blue-700));color:#fff;padding:18px 24px;font-size:24px;text-align:center;font-weight:800;border-top-left-radius:var(--radius);border-top-right-radius:var(--radius)}
+.scan-body{padding:22px;display:flex;flex-direction:column;gap:14px}
+.preview{display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap}
+#camera{width:360px;height:200px;border-radius:12px;background:#e6f0ff;object-fit:cover}
+.preview-qr{width:120px;height:120px;border-radius:12px;background:#fff;border:1px solid #e6f0ff;display:flex;align-items:center;justify-content:center}
+.controls-col{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.scan-message{margin-top:12px;color:var(--muted);text-align:center}
+.hidden{display:none}
+@media (max-width:920px){
+  .hero{display:none}
+  .container{max-width:420px}
+  #camera{width:100%;height:200px}
+}
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1 class="hero-title">Staff<br>Biometric<br>System</h1>
+  </div>
+
+  <main class="container">
+    <section id="homePage" class="page active">
+      <div class="card center-card">
+        <h2 class="card-title">Welcome</h2>
+        <p class="card-sub">Select an option</p>
+        <div class="btn-stack">
+          <button id="btnSignIn" class="btn btn-blue big">✅ Staff Sign In</button>
+          <button id="btnSignOut" class="btn btn-green big">⏻ Staff Sign Out</button>
+          <button id="btnAddStaff" class="btn btn-gradient big">＋ Add Staff</button>
+        </div>
+        <div style="margin-top:16px;text-align:center;color:var(--muted)">Staff Biometric Demo ©</div>
+      </div>
+    </section>
+
+    <section id="addStaffPage" class="page">
+      <div class="card form-card">
+        <h2 class="form-title">Add Staff</h2>
+
+        <label class="field"><span class="field-label">Full Name</span><input id="staffName" type="text" placeholder="e.g. John Doe"></label>
+        <label class="field"><span class="field-label">Employee ID</span><input id="employeeId" type="text" placeholder="e.g. EMP001"></label>
+        <label class="field"><span class="field-label">Designation</span><input id="designation" type="text" placeholder="e.g. Sales"></label>
+
+        <div class="row">
+          <label class="upload">
+            <input id="photoInput" type="file" accept="image/*">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <div style="font-size:28px">🖼️</div>
+              <span style="margin-top:8px;color:var(--blue-600);font-weight:700">Upload Photo</span>
+            </div>
+          </label>
+
+          <div id="generatedQR" class="qrPreview"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button id="btnGenerateQR" class="btn btn-outline">Generate QR</button>
+          <button id="btnSaveStaff" class="btn btn-primary">Add Staff</button>
+          <button id="btnBackFromAdd" class="btn btn-ghost">Back</button>
+        </div>
+
+        <div id="addStatus" style="margin-top:12px;color:var(--muted)"></div>
+      </div>
+    </section>
+
+    <section id="scanPage" class="page">
+      <div class="card scan-card">
+        <div id="scanHeader" class="scan-header">Scan Attendance</div>
+
+        <div class="scan-body">
+          <p class="scan-sub">Use camera to scan or press Scan QR</p>
+
+          <div class="preview">
+            <video id="camera" autoplay playsinline muted></video>
+            <div id="previewQR" class="preview-qr"></div>
+          </div>
+
+          <div class="controls-col">
+            <button id="btnScanFace" class="btn btn-blue">Scan Face</button>
+            <button id="btnScanQR" class="btn btn-blue">Scan QR</button>
+            <button id="btnOpenCamera" class="btn btn-ghost">Open Camera</button>
+            <button id="btnStopCamera" class="btn btn-ghost">Stop Camera</button>
+            <button id="btnBackFromScan" class="btn btn-ghost">Back</button>
+          </div>
+
+          <div id="scanMessage" class="scan-message" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+/*
+ Final combined JS: local enrollment + auto signin/signout by face or QR.
+ - Stores staff in localStorage (field photoBase64)
+ - On Add Staff: shows "Added details of EMPxxx"
+ - Sign In / Sign Out modes behave identically and auto-record on match
+ - Attempts backend calls to /api/staff and /api/attendance/{signin|signout} if API_BASE reachable
+*/
+
+const API_BASE = 'http://localhost:8080/api'; // change if backend runs elsewhere
+let cameraStream = null;
+let currentMode = null; // 'signin' or 'signout'
+
+/* Local storage helpers */
+function getStoredStaffs() {
+  try { return JSON.parse(localStorage.getItem('staffs') || '[]'); } catch (e) { return []; }
+}
+function saveStoredStaffs(list) { localStorage.setItem('staffs', JSON.stringify(list)); }
+function addStoredStaff(staff) {
+  const list = getStoredStaffs();
+  list.push(staff);
+  saveStoredStaffs(list);
+}
+function recordLocalAttendance(entry) {
+  const a = JSON.parse(localStorage.getItem('attendance') || '[]');
+  a.push(entry);
+  localStorage.setItem('attendance', JSON.stringify(a));
+}
+
+/* UI wiring */
+const pages = {
+  home: document.getElementById('homePage'),
+  add: document.getElementById('addStaffPage'),
+  scan: document.getElementById('scanPage')
+};
+
+function showPage(name, modeArg) {
+  Object.values(pages).forEach(p => p.classList.remove('active'));
+  if (pages[name]) pages[name].classList.add('active');
+  if (modeArg) currentMode = modeArg;
+
+  // update header
+  const headerEl = document.getElementById('scanHeader');
+  if (headerEl) {
+    if (name === 'scan' && currentMode) {
+      headerEl.textContent = `Scan Attendance — ${currentMode === 'signin' ? 'Sign In' : 'Sign Out'}`;
+    } else {
+      headerEl.textContent = 'Scan Attendance';
+    }
+  }
+
+  // clear messages
+  const m = document.getElementById('scanMessage'); if (m) m.textContent = '';
+  const s = document.getElementById('addStatus'); if (s) s.textContent = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btnSignIn').addEventListener('click', () => showPage('scan', 'signin'));
+  document.getElementById('btnSignOut').addEventListener('click', () => showPage('scan', 'signout'));
+  document.getElementById('btnAddStaff').addEventListener('click', () => showPage('add'));
+
+  document.getElementById('btnBackFromAdd').addEventListener('click', () => showPage('home'));
+  document.getElementById('btnGenerateQR').addEventListener('click', generateQRForEmployee);
+  document.getElementById('btnSaveStaff').addEventListener('click', saveStaff);
+
+  document.getElementById('btnBackFromScan').addEventListener('click', () => { stopCamera(); showPage('home'); });
+  document.getElementById('btnOpenCamera').addEventListener('click', openCamera);
+  document.getElementById('btnStopCamera').addEventListener('click', stopCamera);
+  document.getElementById('btnScanQR').addEventListener('click', scanQRAndAutoSign);
+  document.getElementById('btnScanFace').addEventListener('click', scanFaceAndAutoSign);
+});
+
+/* ---------- Add staff ---------- */
+async function saveStaff() {
+  const name = document.getElementById('staffName').value.trim();
+  const employeeId = document.getElementById('employeeId').value.trim();
+  const designation = document.getElementById('designation').value.trim();
+  const photoInput = document.getElementById('photoInput');
+
+  if (!name || !employeeId) { alert('Please enter Name and Employee ID'); return; }
+
+  let photoBase64 = null;
+  if (photoInput.files && photoInput.files[0]) {
+    photoBase64 = await fileToBase64(photoInput.files[0]);
+  } else {
+    photoBase64 = createPlaceholderDataUrl(employeeId);
+  }
+
+  const staff = { name, employeeId, designation, photoBase64, createdAt: new Date().toISOString() };
+
+  // store locally
+  addStoredStaff(staff);
+
+  // show immediate feedback
+  const statusEl = document.getElementById('addStatus');
+  statusEl.textContent = `Added details of ${employeeId}`;
+
+  // try backend save (non-blocking)
+  try {
+    const res = await fetch(`${API_BASE}/staff`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staff)
+    });
+    if (!res.ok) console.warn('Backend returned non-OK when saving staff:', res.statusText);
+  } catch (err) {
+    console.warn('Backend unreachable, saved locally only:', err);
+  }
+
+  // show QR preview
+  const qrEl = document.getElementById('generatedQR');
+  qrEl.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(employeeId)}&size=120x120" alt="qr">`;
+}
+
+function generateQRForEmployee() {
+  const employeeId = document.getElementById('employeeId').value.trim();
+  if (!employeeId) { alert('Enter Employee ID to generate QR'); return; }
+  const qrEl = document.getElementById('generatedQR');
+  qrEl.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(employeeId)}&size=120x120" alt="qr">`;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = err => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
+/* placeholder avatar */
+function createPlaceholderDataUrl(text) {
+  const c = document.createElement('canvas');
+  c.width = 200; c.height = 200;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#dbeafe'; ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle = '#1e3a8a'; ctx.font = 'bold 72px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText((text||'U').slice(0,1).toUpperCase(), c.width/2, c.height/2);
+  return c.toDataURL('image/png');
+}
+
+/* ---------- Camera ---------- */
+async function openCamera() {
+  const cam = document.getElementById('camera');
+  if (!cam) return;
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }});
+    cam.srcObject = cameraStream;
+    await cam.play().catch(()=>{});
+  } catch (err) {
+    console.error('Camera error', err);
+    alert('Unable to open camera. Run from https or localhost and allow permissions.');
+  }
+}
+
+function stopCamera() {
+  const cam = document.getElementById('camera');
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  if (cam) cam.srcObject = null;
+}
+
+/* ---------- Image comparison (simple RMSE) ---------- */
+function compareImagesDataURLs(dataUrlA, dataUrlB, size = 80) {
+  return new Promise((resolve) => {
+    const imgA = new Image(); const imgB = new Image();
+    let loaded = 0;
+    function onload() {
+      loaded++; if (loaded < 2) return;
+      const c = document.createElement('canvas'); c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+
+      ctx.clearRect(0,0,size,size); ctx.drawImage(imgA, 0, 0, size, size);
+      const aData = ctx.getImageData(0,0,size,size).data;
+
+      ctx.clearRect(0,0,size,size); ctx.drawImage(imgB, 0, 0, size, size);
+      const bData = ctx.getImageData(0,0,size,size).data;
+
+      let sumSq = 0; let count = 0;
+      for (let i = 0; i < aData.length; i += 4) {
+        const lumA = 0.299*aData[i] + 0.587*aData[i+1] + 0.114*aData[i+2];
+        const lumB = 0.299*bData[i] + 0.587*bData[i+1] + 0.114*bData[i+2];
+        const d = lumA - lumB;
+        sumSq += d*d;
+        count++;
+      }
+      const mse = sumSq / count; const rmse = Math.sqrt(mse);
+      resolve(rmse);
+    }
+    imgA.crossOrigin = "Anonymous"; imgB.crossOrigin = "Anonymous";
+    imgA.onload = onload; imgB.onload = onload;
+    imgA.src = dataUrlA; imgB.src = dataUrlB;
+  });
+}
+
+/* ---------- Face scan & auto sign (Sign In & Sign Out identical) ---------- */
+async function scanFaceAndAutoSign() {
+  const cam = document.getElementById('camera');
+  if (!cam || !cameraStream) { alert('Camera not open. Click Open Camera first.'); return; }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = cam.videoWidth || 320; canvas.height = cam.videoHeight || 240;
+  const ctx = canvas.getContext('2d'); ctx.drawImage(cam, 0, 0, canvas.width, canvas.height);
+  const frameDataUrl = canvas.toDataURL('image/png');
+
+  const staffs = getStoredStaffs();
+  if (!staffs.length) { alert('No staff enrolled locally. Add staff first.'); return; }
+
+  let best = { idx: -1, rmse: Infinity };
+  for (let i = 0; i < staffs.length; i++) {
+    const photo = staffs[i].photoBase64;
+    const rmse = await compareImagesDataURLs(frameDataUrl, photo, 80);
+    if (rmse < best.rmse) best = { idx: i, rmse };
+  }
+
+  const threshold = 30;
+  const msgEl = document.getElementById('scanMessage');
+  if (best.idx !== -1 && best.rmse <= threshold) {
+    const matched = staffs[best.idx];
+    msgEl.textContent = `Match found: ${matched.employeeId} (score ${best.rmse.toFixed(1)}) — auto ${currentMode}`;
+    await signAttendance(matched.employeeId, currentMode);
+  } else {
+    msgEl.textContent = `No match (best ${best.rmse===Infinity?'N/A':best.rmse.toFixed(1)}). Try again or use QR.`;
+  }
+}
+
+/* ---------- QR scan (simulation) & auto sign ---------- */
+function scanQRAndAutoSign() {
+  const id = prompt('Enter Employee ID from QR (simulation):');
+  if (!id) return;
+  const staffs = getStoredStaffs();
+  const found = staffs.find(s => s.employeeId.toLowerCase() === id.toLowerCase());
+  const msgEl = document.getElementById('scanMessage');
+  if (found) {
+    document.getElementById('previewQR').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(id)}&size=120x120" alt="qr">`;
+    msgEl.textContent = `QR matched: ${found.employeeId} — auto ${currentMode}`;
+    signAttendance(found.employeeId, currentMode);
+  } else {
+    msgEl.textContent = `QR scanned: ${id} — not enrolled locally`;
+  }
+}
+
+/* ---------- Sign attendance (backend attempt, fallback to local) ---------- */
+async function signAttendance(employeeId, mode) {
+  const msgEl = document.getElementById('scanMessage');
+  const payload = { employeeId };
+  try {
+    const res = await fetch(`${API_BASE}/attendance/${mode}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(()=>res.statusText);
+      throw new Error(txt || res.statusText);
+    }
+    const data = await res.json();
+    const ts = data.timestamp ? (new Date(data.timestamp)).toLocaleString() : new Date().toLocaleString();
+    msgEl.textContent = `${mode === 'signin' ? 'Signed In' : 'Signed Out'}: ${data.employeeId} at ${ts}`;
+  } catch (err) {
+    const tsIso = new Date().toISOString();
+    recordLocalAttendance({ employeeId, mode, timestamp: tsIso });
+    msgEl.textContent = `(Offline) ${mode === 'signin' ? 'Signed In' : 'Signed Out'} locally: ${employeeId} at ${new Date(tsIso).toLocaleString()}`;
+  } finally {
+    stopCamera();
+  }
+}
+  </script>
+</body>
+</html>
